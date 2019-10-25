@@ -27,7 +27,7 @@ npm run start
 
 ### 6、后台运行 
 ```
- npm install -g pm2
+npm install -g pm2
 ```
 随后执行 
 ```
