@@ -5,7 +5,7 @@ const logger = require('./utilities/logger');
 
 
 aliddns.init(config);
-timer.init();
+timer.init(config);
 logger.info('client is started');
 
 

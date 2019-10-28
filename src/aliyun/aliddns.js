@@ -73,12 +73,12 @@ function getDomainId() {
     });
 }
 
-function addDomainIp(ip) {
+function addDomain(ip) {
     return addDomainRecord(ip);
 }
 
 
-async function updateDomainIp(ip) {
+async function updateDomain(ip) {
     let recordId = await getDomainId();
     return updateDomainRecord(recordId, ip);
 }
@@ -123,6 +123,7 @@ function init(config) {
 module.exports = {
     init,
     getDomainIp,
-    addDomainIp,
-    updateDomainIp
+    addDomain,
+    updateDomain,
+    getDomain
 };

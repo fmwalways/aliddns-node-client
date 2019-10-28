@@ -4,25 +4,35 @@ const ip = require('../utilities/ip');
 const SECOND_RULE = '* * * * * *';
 const MINUTE_RULE = '0 * * * * *';
 
+let ali_config = {};
 
 
-async function checkIpChange() {
+
+async function checkChange() {
     let realIp = ip.getRealIp();
-    let serverIp = await aliddns.getDomainIp();
-    if (!realIp || realIp === serverIp) {
+    let domain = await aliddns.getDomain();
+    if (!domain) {
         return;
     }
-    await serverIp ? updateDomainIp(realIp) : addDomainIp(realIp);
+    let serverIp = domain && domain.Value;
+    if (!serverIp) {
+        await addDomain(realIp);
+        return;
+    }
+    let ipChanged = realIp && realIp !== serverIp;
+    let domainChanged = `${ali_config.child}.${ali_config.domain}` !== `${domain.RR}.${domain.DomainName}`;
+    let changed = ipChanged || domainChanged;
+    changed && await updateDomain(realIp);
 }
 
 
-async function addDomainIp(ip) {
-    await aliddns.addDomainIp(ip);
+async function addDomain(ip) {
+    await aliddns.addDomain(ip);
 }
 
 
-async function updateDomainIp(ip) {
-    await aliddns.updateDomainIp(ip);
+async function updateDomain(ip) {
+    await aliddns.updateDomain(ip);
 }
 
 
@@ -31,9 +41,9 @@ function start(rule, callback) {
 }
 
 
-
-function init() {
-    start(MINUTE_RULE, () => checkIpChange());
+function init(config) {
+    ali_config = config;
+    start(MINUTE_RULE, () => checkChange());
 }
 
 module.exports = {
