@@ -9,7 +9,10 @@
 
 ### 2、clone 项目代码
 
-### 3、cd aliddns-node-client 安装依赖 
+### 3、安装依赖
+```
+cd aliddns-node-client
+```
 ```
 npm install
 ```
