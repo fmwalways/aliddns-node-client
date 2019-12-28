@@ -8,36 +8,37 @@ const Ali_DOMAIN_TYPE = 'A';
 
 let Ali_ACCESS_KEY_ID = '';
 let Ali_ACCESS_KEY_SECRET = '';
-let Ali_DOMAIN = '';
-let Ali_DOMAIN_RR = '';
 
 
-function findDomainRecords() {
+function findDomainRecords(domain) {
+    let {DomainName, RR} = parseDomain(domain);
     return requestAliyun('GET', {
         Action: 'DescribeDomainRecords',
-        DomainName: Ali_DOMAIN,
+        DomainName,
         TypeKeyWord: Ali_DOMAIN_TYPE,
-        RRKeyWord: Ali_DOMAIN_RR
+        RRKeyWord: RR
     });
 }
 
 
-function addDomainRecord(ip) {
+function addDomainRecord(ip, domain) {
+    let {DomainName, RR} = parseDomain(domain);
     return requestAliyun('GET', {
         Action: 'AddDomainRecord',
-        DomainName: Ali_DOMAIN,
+        DomainName,
         TypeKeyWord: Ali_DOMAIN_TYPE,
-        RR: Ali_DOMAIN_RR,
+        RR,
         Type: Ali_DOMAIN_TYPE,
         Value: ip
     });
 }
 
-function updateDomainRecord(recordId, ip) {
+function updateDomainRecord(recordId, ip, domain) {
+    let {DomainName, RR} = parseDomain(domain);
     return requestAliyun('GET', {
         Action: 'UpdateDomainRecord',
-        DomainName: Ali_DOMAIN,
-        RR: Ali_DOMAIN_RR,
+        DomainName,
+        RR,
         Type: Ali_DOMAIN_TYPE,
         RecordId: recordId,
         Value: ip
@@ -46,8 +47,8 @@ function updateDomainRecord(recordId, ip) {
 }
 
 
-function getDomain() {
-    return findDomainRecords().then(result => {
+function getDomainRecord(domain) {
+    return findDomainRecords(domain).then(result => {
         if (!result || !result.TotalCount) {
             return {};
         }
@@ -60,27 +61,27 @@ function getDomain() {
 }
 
 
-function getDomainIp() {
-    return getDomain().then(result => {
+function getDomainIp(domain) {
+    return getDomainRecord(domain).then(result => {
         return result && result.Value;
     });
 }
 
 
-function getDomainId() {
-    return getDomain().then(result => {
+function getDomainId(domain) {
+    return getDomainRecord(domain).then(result => {
         return result && result.RecordId;
     });
 }
 
-function addDomain(ip) {
-    return addDomainRecord(ip);
+function addDomain(ip, domain) {
+    return addDomainRecord(ip, domain);
 }
 
 
-async function updateDomain(ip) {
-    let recordId = await getDomainId();
-    return updateDomainRecord(recordId, ip);
+async function updateDomain(ip, domain) {
+    let recordId = await getDomainId(domain);
+    return updateDomainRecord(recordId, ip, domain);
 }
 
 
@@ -108,15 +109,21 @@ function init(config) {
     if (!config.domain) {
         logger.error(error.ALI_DOMAIN_EMPTY);
     }
-    if (!config.child) {
-        logger.error(error.ALI_CHILD_DOMAIN_EMPTY);
-    }
 
     Ali_ACCESS_KEY_ID = config.accessKeyId;
     Ali_ACCESS_KEY_SECRET = config.accessKeySecret;
-    Ali_DOMAIN = config.domain;
-    Ali_DOMAIN_RR = config.child;
 
+}
+
+
+function parseDomain(domain) {
+    let results = domain.split('.');
+    if (results.length < 3) {
+        return {RR: '@', DomainName: domain};
+    }
+    let RR = results.splice(0, results.length - 2).join('.');
+    let DomainName = results.join('.');
+    return {RR, DomainName}
 }
 
 
@@ -125,5 +132,5 @@ module.exports = {
     getDomainIp,
     addDomain,
     updateDomain,
-    getDomain
+    getDomainRecord
 };

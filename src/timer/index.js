@@ -4,35 +4,39 @@ const ip = require('../utilities/ip');
 const SECOND_RULE = '* * * * * *';
 const MINUTE_RULE = '0 * * * * *';
 
-let ali_config = {};
-
+let Ali_DOMAINS = [];
 
 
 async function checkChange() {
     let realIp = ip.getRealIp();
-    let domain = await aliddns.getDomain();
-    if (!domain) {
-        return;
-    }
-    let serverIp = domain && domain.Value;
-    if (!serverIp) {
-        await addDomain(realIp);
-        return;
-    }
-    let ipChanged = realIp && realIp !== serverIp;
-    let domainChanged = `${ali_config.child}.${ali_config.domain}` !== `${domain.RR}.${domain.DomainName}`;
-    let changed = ipChanged || domainChanged;
-    changed && await updateDomain(realIp);
+
+    Ali_DOMAINS.forEach(async domain => {
+        let record = await aliddns.getDomainRecord(domain);
+        if (!record) {
+            return;
+        }
+        let serverIp = record && record.Value;
+        if (!serverIp) {
+            await addDomain(realIp, domain);
+            return;
+        }
+        let ipChanged = realIp && realIp !== serverIp;
+        let {RR, DomainName} = parseDomain(domain);
+        let domainChanged = `${RR}.${DomainName}` !== `${record.RR}.${record.DomainName}`;
+        let changed = ipChanged || domainChanged;
+        changed && await updateDomain(realIp);
+    });
+
 }
 
 
-async function addDomain(ip) {
-    await aliddns.addDomain(ip);
+async function addDomain(ip, domain) {
+    await aliddns.addDomain(ip, domain);
 }
 
 
-async function updateDomain(ip) {
-    await aliddns.updateDomain(ip);
+async function updateDomain(ip, domain) {
+    await aliddns.updateDomain(ip, domain);
 }
 
 
@@ -42,8 +46,22 @@ function start(rule, callback) {
 
 
 function init(config) {
-    ali_config = config;
+    if (Array.isArray(config.domain)) {
+        Ali_DOMAINS = config.domain;
+    } else {
+        Ali_DOMAINS = Array.of(config.domain);
+    }
     start(MINUTE_RULE, () => checkChange());
+}
+
+function parseDomain(domain) {
+    let results = domain.split('.');
+    if (results.length < 3) {
+        return {RR: '@', DomainName: domain};
+    }
+    let RR = results.splice(0, results.length - 2).join('.');
+    let DomainName = results.join('.');
+    return {RR, DomainName}
 }
 
 module.exports = {

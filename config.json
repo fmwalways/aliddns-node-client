@@ -1,6 +1,5 @@
 {
   "accessKeyId": "XXX",
   "accessKeySecret": "XXX",
-  "domain": "XXX",
-  "child": "XXX"
+  "domain": ["XXX", "XXX"]
 }
