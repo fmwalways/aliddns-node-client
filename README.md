@@ -20,8 +20,7 @@ npm install
 ### 4、修改config.json 
     accessKeyId       你的阿里云accessKeyId
     accessKeySecret   你的阿里云accessKeySecret
-    domain            顶级域名  例如  baidu.com
-    child             二级域名  例如  cloud  (cloud.baidu.com)
+    domain            域名  例如  ["baidu.com", "fomav.cn"] 或者 fomav.cn
     
 ### 5、运行程序
 ```
