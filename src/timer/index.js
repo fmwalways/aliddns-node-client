@@ -24,7 +24,7 @@ async function checkChange() {
         let {RR, DomainName} = parseDomain(domain);
         let domainChanged = `${RR}.${DomainName}` !== `${record.RR}.${record.DomainName}`;
         let changed = ipChanged || domainChanged;
-        changed && await updateDomain(realIp);
+        changed && await updateDomain(realIp, domain);
     });
 
 }
